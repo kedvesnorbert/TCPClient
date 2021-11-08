@@ -11,7 +11,7 @@ from PyQt5.QtGui import *
 IP = "127.0.0.1"
 PORT = 27095
 FORMAT = "utf-8"
-BUFLEN = 1024
+BUFLEN = 5
 ClientSocket = 0
 
 class ScrollLabel(QScrollArea):
@@ -252,7 +252,7 @@ class ChatWindow(QWidget):
         self.chatlayout.addLayout(self.chatsendlayout)
 
         self.chatmsg = QLineEdit()
-        self.chatmsg.setMaxLength(BUFLEN)
+        self.chatmsg.setMaxLength(BUFLEN+100)
         self.chatmsg.setPlaceholderText("Enter message to send!")
 
         # calling sendMSG() if Enter was pressed
