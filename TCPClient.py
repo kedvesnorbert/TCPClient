@@ -11,8 +11,9 @@ from PyQt5.QtGui import *
 IP = "127.0.0.1"
 PORT = 27095
 FORMAT = "utf-8"
-BUFLEN = 5
+BUFLEN = 1024
 ClientSocket = 0
+MYCLIENTNAME = ""
 
 class ScrollLabel(QScrollArea):
     # contructor
@@ -49,6 +50,14 @@ class ScrollLabel(QScrollArea):
         #get text
         return self.label.text()
 
+def get_messagelength(messagedata):
+        y = 0
+        for x in messagedata:
+            if(ord(x)>127):
+                y = y + 2
+            else:
+                y = y + 1
+        return y
 
 class LoginWindow(QWidget):
     signal_connect = pyqtSignal(bool)
@@ -133,29 +142,36 @@ class LoginWindow(QWidget):
 
     def connect_to_server(self):
         loginW.getLoginBtn().setEnabled(False)
+        loginW.getLoginErrorMsg().setText("LOADING ...\n")
         try:
-            usernamepw = loginW.getUsernameEntered().text() + "\t" + \
-                loginW.getPasswordEntered().text()
-            if(len(usernamepw) < 3):
+            usernamepw = loginW.getUsernameEntered().text() + "\t" + loginW.getPasswordEntered().text()
+            if(len(loginW.getUsernameEntered().text()) < 3 or len(loginW.getPasswordEntered().text()) < 3):
                 loginW.getLoginErrorMsg().setText(
-                    "Nem írtál be felhasználónevet vagy jelszót!\n")
-                return
-            usernamepw = "1" + usernamepw
-            usernamepw = usernamepw.encode(FORMAT)
-            global ClientSocket
-            ClientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            ClientSocket.connect((IP, PORT))
-
-            ClientSocket.send(usernamepw)
-            respi = ClientSocket.recv(BUFLEN)
-            respi = respi.decode(FORMAT)
-            print(respi)
-            if respi == "1\0":
-                self.signal_connect.emit(True)
+                    "Nem írtál be felhasználónevet vagy jelszót!\nPlease enter username and password!")
             else:
-                ClientSocket.close()
-                loginW.getLoginErrorMsg().setText(
-                    "Hibás felhasználónév vagy jelszó!\n")
+                MYCLIENTNAME = loginW.getUsernameEntered().text()
+                len_usernamepw = get_messagelength(usernamepw)
+                print(len_usernamepw)
+                usernamepw = "1\t" + str(len_usernamepw) + "\t" + usernamepw
+                usernamepw = usernamepw.encode(FORMAT)
+                global ClientSocket
+                ClientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                ClientSocket.connect((IP, PORT))
+                ClientSocket.send(usernamepw)
+                respi = ClientSocket.recv(BUFLEN)
+                respi = respi.decode(FORMAT)
+                print(respi)
+                if respi == "E200\0":
+                    self.signal_connect.emit(True)
+                    print(MYCLIENTNAME)
+                else:
+                    ClientSocket.close()
+                    if respi == "E404\0":   
+                        loginW.getLoginErrorMsg().setText(
+                            "Hibás felhasználónév vagy jelszó!\nWrong username or password!\n")
+                    if respi == "E403\0":
+                        loginW.getLoginErrorMsg().setText(
+                            "Ezzel a fiókkal már bejelentkeztek!\nThis account is currently is use!\n")
         except:
             loginW.getLoginErrorMsg().setText(
                 "A szerver visszautasította a kapcsolódást! Server temporary not reachable.\nERR_CONNECTION_REFUSED\n")
@@ -184,22 +200,34 @@ class ChatWindow(QWidget):
     def receive_msg(self):
         while True:
             try:
+                print("Receiving data from server ...")
                 self.received_data = ClientSocket.recv(BUFLEN)
-                self.received_data = self.received_data.decode(FORMAT)
                 print(self.received_data)
-                self.signal_recvdata.emit(self.received_data)
+                self.received_data = self.received_data.decode(FORMAT)
+
+                self.datatype = int(self.received_data.split("\t")[0])
+                self.datalength = int(self.received_data.split("\t")[1])
+                self.received_data = self.received_data.split("\t")[2]
+                
+                if get_messagelength(self.received_data) == self.datalength:
+                    self.signal_recvdata.emit(self.received_data)
+                else:
+                    self.signal_recvdata.emit(self.received_data + " MISSING DATA!!!")
+                
             except:
                 chatW.hide()
                 loginW.show()
                 loginW.getLoginErrorMsg().setText(
                     "Megszűnt a kommunikáció a szerverrel.\nERR_CONNECTION_RESET\nA kapcsolat alaphelyzetbe állt.")
                 break
+    
 
     def sendMSG(self):
         self.signal_senddata.emit(True)
         text = self.getChatmsg().text().strip()
         if len(text) > 0:
-            #self.getMessageLabel().setText(self.getMessageLabel().toPlainText() + text + "\n")
+            len_text = get_messagelength(text)
+            text = "2\t" + str(len_text) + "\t" + text
             self.getMessageLabel().moveCursor(QtGui.QTextCursor.End)
             self.getChatmsg().setText('')
             text = text.encode(FORMAT)
@@ -252,7 +280,7 @@ class ChatWindow(QWidget):
         self.chatlayout.addLayout(self.chatsendlayout)
 
         self.chatmsg = QLineEdit()
-        self.chatmsg.setMaxLength(BUFLEN+100)
+        self.chatmsg.setMaxLength(BUFLEN+20)
         self.chatmsg.setPlaceholderText("Enter message to send!")
 
         # calling sendMSG() if Enter was pressed
@@ -285,3 +313,4 @@ chatW = ChatWindow()
 chatW.hide()
 
 sys.exit(app.exec_())
+
