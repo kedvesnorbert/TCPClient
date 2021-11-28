@@ -53,3 +53,9 @@ The client can send and receive message at the same time since the application u
 ### Sending a confirmation message in private for (not) accepting the file transmission
 - If a client wants to send you a file, you must confirm the transfer. A private message appears above the SEND button that contains the filename to receive and its size in MegaBytes. If you click the Yes button, you accep the file transmission and it starts automatically, else if you click the No button, the transfer will not happen.
 
+### File transfer
+- This functionality is allowed only in private message sending. If the recipient accepted the transmission, the transfer starts automatically.
+- IMPORTANT! During the file transfer, neither the sender client nor the recipient is allowed to receive or send messages. Disconnecting is also restricted.
+- If one of the clients closes the application during the transfer, it can cause the following problems: the other client's application shuts down, the entire file will not arrives successfully, sending or receiving messages as functionalities will not unblock.
+- If the transfer ends, the red background-colored label disappears, and you and the recipient will be able to send or receive messages.
+- The recived file is located in the application folder
