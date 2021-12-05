@@ -51,7 +51,7 @@ The client can send and receive message at the same time since the application u
 - You need to select the file by clicking the SEND FILE button. After you selected the file, the application sends automatically a private message to the recipient to ask him whether he accepts the file or not. This message contains the selected file's name with its extension and the size of the file in Megabytes. A red background-colored label appears above the SEND button to inform you that you are waiting for the recipient's answer. If you get the YES answer from the client, the file transfer starts automatically, else the red background-colored label disappears and nothing will happen.
 
 ### Sending a confirmation message in private for (not) accepting the file transmission
-- If a client wants to send you a file, you must confirm the transfer. A private message appears above the SEND button that contains the filename to receive and its size in MegaBytes. If you click the Yes button, you accep the file transmission and it starts automatically, else if you click the No button, the transfer will not happen.
+- If a client wants to send you a file, you must confirm the transfer. A private message appears above the SEND button that contains the filename to receive and its size in MegaBytes. If you click the Yes button, you accept the file transmission and it starts automatically, else if you click the No button, the transfer will not happen.
 
 ### File transfer
 - This functionality is allowed only in private message sending. If the recipient accepted the transmission, the transfer starts automatically.
